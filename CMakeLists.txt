@@ -26,14 +26,17 @@ find_package(Catch2 REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 add_executable(tree_node src/TreeNode.cpp)
+add_executable(RRT src/RRT.cpp src/TreeNode.cpp)
 
 ament_target_dependencies(tree_node Eigen3 Catch2)
+ament_target_dependencies(RRT Eigen3 Catch2)
 
 install(TARGETS tree_node
         DESTINATION lib/${PROJECT_NAME})
 
 target_link_libraries(tree_node
-        PRIVATE
+        Catch2::Catch2)
+target_link_libraries(RRT
         Catch2::Catch2)
 
 if(BUILD_TESTING)

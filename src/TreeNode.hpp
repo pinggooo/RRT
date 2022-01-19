@@ -24,6 +24,7 @@ public:
     void setParent(Node* node);
     void removeParent();
     Eigen::Vector2f getPosition();
+    void setPosition(const Eigen::Vector2f& position);
 
     bool operator == (const Node& object) const {
         if (this->id == object.id) {

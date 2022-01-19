@@ -42,6 +42,10 @@ Eigen::Vector2f Node::getPosition() {
     return this->position;
 }
 
+void Node::setPosition(const Eigen::Vector2f& position) {
+    this->position = position;
+}
+
 //****************************************************//
 //                    UNIT TESTING                    //
 //****************************************************//
