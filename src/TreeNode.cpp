@@ -7,13 +7,13 @@ int Node::getId() {
     return this->id;
 }
 
-std::vector<Node> Node::getChildren() {
+std::vector<Node*> Node::getChildren() {
     return this->children;
 }
 
-void Node::addChild(const Node& node) {
+void Node::addChild(Node* node) {
     for (auto& iter : this->children) {
-        if (iter.id == node.id) {
+        if (iter->getId() == node->getId()) {
             return;
         }
     }
@@ -21,7 +21,7 @@ void Node::addChild(const Node& node) {
     this->children.push_back(node);
 }
 
-void Node::removeChild(const Node& node) {
+void Node::removeChild(Node* node) {
     this->children.erase(std::remove(this->children.begin(), this->children.end(), node),
                          this->children.end());
 }
@@ -49,7 +49,7 @@ void Node::setPosition(const Eigen::Vector2f& position) {
 //****************************************************//
 //                    UNIT TESTING                    //
 //****************************************************//
-
+/*
 int main(int argc, char** argv) {
     Catch::Session session;
     bool isTestMode = false;
@@ -104,6 +104,7 @@ TEST_CASE("Node TEST", "[node]") {
     REQUIRE(node.getChildren().size() == 2);
     REQUIRE(child1.getId() == 3);
     REQUIRE(child2.getId() == 4);
-    REQUIRE(node.getChildren().at(0) == child1);
-    REQUIRE(node.getChildren().at(1) == child2);
+    REQUIRE(node.getChildren().at(0) == &child1);
+    REQUIRE(node.getChildren().at(1) == &child2);
 }
+*/

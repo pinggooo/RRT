@@ -13,13 +13,16 @@ public:
         this->parent = parent;
         this->position = position;
         this->id = count++;
-        parent->addChild(*this);
+
+        if (this->parent != nullptr) {
+            this->parent->addChild(this);
+        }
     }
 
     int getId();
-    std::vector<Node> getChildren();
-    void addChild(const Node& node);
-    void removeChild(const Node& node);
+    std::vector<Node*> getChildren();
+    void addChild(Node* node);
+    void removeChild(Node* node);
     Node* getParent();
     void setParent(Node* node);
     void removeParent();
@@ -39,7 +42,7 @@ public:
 private:
     int id{};
     Node* parent{};
-    std::vector<Node> children;
+    std::vector<Node*> children;
     Eigen::Vector2f position;
     static int count;
 };
