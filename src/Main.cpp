@@ -59,11 +59,11 @@ int main(int argc, char** argv) {
     executor.add_node(std::make_shared<EndPosSubscriber>());
 
     while (rclcpp::ok()) {
-        executor.spin_once();
-
         if (app->initialize() && !app->isFinished) {
             app->run();
         }
+
+        executor.spin_once();
     }
 
     rclcpp::shutdown();
