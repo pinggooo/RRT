@@ -1,24 +1,27 @@
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/point_stamped.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "Application.hpp"
 
-Application app;
+Application* app;
 
 class StartPosSubscriber : public rclcpp::Node {
 public:
     StartPosSubscriber() : Node("start_position_subscriber") {
+        auto qos_profile = rclcpp::QoS(rclcpp::KeepLast(1));
         subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-                "initialpose", 1, std::bind(&StartPosSubscriber::topic_callback, this, std::placeholders::_1)
+                "initialpose", qos_profile, std::bind(&StartPosSubscriber::topic_callback, this, std::placeholders::_1)
                 );
     }
 
 private:
     void topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) const {
-        if (!app.isGotStartPos) {
-            app.start_pos.x() = float(msg->pose.pose.position.x);
-            app.start_pos.y() = float(msg->pose.pose.position.y);
-            app.isGotStartPos = true;
+        if (!app->isGotStartPos) {
+            app->start_pos.x() = float(msg->pose.pose.position.x);
+            app->start_pos.y() = float(msg->pose.pose.position.y);
+            app->isGotStartPos = true;
+
+            RCLCPP_INFO(this->get_logger(), "Start Position Selected!");
         }
     }
 
@@ -28,28 +31,39 @@ private:
 class EndPosSubscriber : public rclcpp::Node {
 public:
     EndPosSubscriber() : Node("end_position_subscriber") {
-        subscription_ = this->create_subscription<geometry_msgs::msg::PointStamped>(
-                "goal_pose", 1, std::bind(&EndPosSubscriber::topic_callback, this, std::placeholders::_1)
+        auto qos_profile = rclcpp::QoS(rclcpp::KeepLast(1));
+        subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+                "goal_pose", qos_profile, std::bind(&EndPosSubscriber::topic_callback, this, std::placeholders::_1)
         );
     }
 
 private:
-    void topic_callback(const geometry_msgs::msg::PointStamped::SharedPtr msg) const {
-        if (!app.isGotEndPos) {
-            app.end_pos.x() = float(msg->point.x);
-            app.end_pos.y() = float(msg->point.y);
-            app.isGotEndPos = true;
+    void topic_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) const {
+        if (!app->isGotEndPos) {
+            app->end_pos.x() = float(msg->pose.position.x);
+            app->end_pos.y() = float(msg->pose.position.y);
+            app->isGotEndPos = true;
+
+            RCLCPP_INFO(this->get_logger(), "End Position Selected!");
         }
     }
 
-    rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscription_;
 };
 
 int main(int argc, char** argv) {
+    app = new Application();
     rclcpp::init(argc, argv);
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(std::make_shared<StartPosSubscriber>());
+    executor.add_node(std::make_shared<EndPosSubscriber>());
 
-    while (rclcpp::ok() && app.initialize()) {
-        app.run();
+    while (rclcpp::ok()) {
+        executor.spin_once();
+
+        if (app->initialize() && !app->isFinished) {
+            app->run();
+        }
     }
 
     rclcpp::shutdown();

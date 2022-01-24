@@ -9,6 +9,7 @@ public:
         this->isGotStartPos = false;
         this->isGotEndPos = false;
         this->isGotMapSize = false;
+        this->isFinished = false;
         this->rrt = nullptr;
     };
 
@@ -20,6 +21,7 @@ public:
     bool isGotStartPos;
     bool isGotEndPos;
     bool isGotMapSize;
+    bool isFinished;
     Eigen::Vector2f start_pos;
     Eigen::Vector2f end_pos;
     Eigen::Vector2f map_size;

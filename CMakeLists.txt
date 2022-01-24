@@ -19,6 +19,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Catch2 REQUIRED)
 
@@ -28,7 +30,7 @@ add_executable(rrt_test src/Main.cpp src/RRT.cpp src/TreeNode.cpp src/Applicatio
 
 ## ament_target_dependencies(tree_node Eigen3 Catch2)
 ## ament_target_dependencies(RRT Eigen3 Catch2)
-ament_target_dependencies(rrt_test rclcpp Eigen3 Catch2)
+ament_target_dependencies(rrt_test rclcpp std_msgs geometry_msgs nav_msgs Eigen3 Catch2)
 
 target_include_directories(rrt_test PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -33,4 +33,6 @@ void Application::run() {
         rrt->addPathNode(node);
         node = node->getParent();
     }
+
+    isFinished = true;
 }
