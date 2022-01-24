@@ -1,6 +1,5 @@
 #include "RRT.hpp"
 #include "catch2/catch_all.hpp"
-#include <memory>
 
 Node* RRT::getRandomNode() {
     std::random_device rd;
