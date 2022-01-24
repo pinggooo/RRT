@@ -6,7 +6,7 @@ Node* RRT::getRandomNode() {
     std::default_random_engine eng(rd());
     std::uniform_real_distribution<float> urd(0, 1);
 
-    Eigen::Vector2f random_pos(urd(eng) * MAP_WIDTH, urd(eng) * MAP_HEIGHT);
+    Eigen::Vector2f random_pos(urd(eng) * map_size.x(), urd(eng) * map_size.y());
     Node* random_node = new Node(nullptr, random_pos);
     Node* nearest = getNearest(random_node);
 
@@ -16,11 +16,11 @@ Node* RRT::getRandomNode() {
     random_pos = nearest->getPosition() + unit_vector * this->step_size;
     random_node->setPosition(random_pos);
 
-    if (random_pos.x() < 0 || random_pos.x() > MAP_WIDTH) {
+    if (random_pos.x() < 0 || random_pos.x() > map_size.x()) {
         return nullptr;
     }
 
-    if (random_pos.y() < 0 || random_pos.y() > MAP_HEIGHT) {
+    if (random_pos.y() < 0 || random_pos.y() > map_size.y()) {
         return nullptr;
     }
 
@@ -38,7 +38,7 @@ float RRT::getDistance(Node* a, Node* b) {
 
 Node* RRT::getNearest(Node* node) {
     Node* nearest;
-    float min_distance = sqrtf(MAP_WIDTH * MAP_WIDTH + MAP_HEIGHT * MAP_HEIGHT);
+    float min_distance = sqrtf(map_size.x() * map_size.x() + map_size.y() * map_size.y());
 
     for (auto& node_iter : this->node_list) {
         float distance = getDistance(node, node_iter);
@@ -101,6 +101,18 @@ std::vector<Node*> RRT::getNodeList() {
     return this->node_list;
 }
 
+void RRT::addPathNode(Node* node) {
+    if (node == nullptr) {
+        return;
+    }
+
+    this->path.push_back(node);
+}
+
+std::vector<Node*> RRT::getPath() {
+    return this->path;
+}
+
 
 //****************************************************//
 //                    UNIT TESTING                    //
@@ -131,8 +143,9 @@ int main(int argc, char** argv) {
 TEST_CASE("RRT TEST", "[rrt]") {
     Eigen::Vector2f start_pos(START_POS_X, START_POS_Y);
     Eigen::Vector2f end_pos(END_POS_X, END_POS_Y);
+    Eigen::Vector2f map_size(500, 500);
 
-    RRT rrt(start_pos, end_pos);
+    RRT rrt(start_pos, end_pos, map_size);
 
     REQUIRE(rrt.getStepSize() == 5);
     REQUIRE(rrt.getMaxLoopCount() == 1000);

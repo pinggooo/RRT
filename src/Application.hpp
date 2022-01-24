@@ -1,17 +1,29 @@
 #ifndef RRT_APPLICATION_HPP
 #define RRT_APPLICATION_HPP
 
-#include "nav2_map_server/map_server.hpp"
 #include "RRT.hpp"
 
 class Application {
 public:
-    Application() = default;
+    Application() {
+        this->isGotStartPos = false;
+        this->isGotEndPos = false;
+        this->isGotMapSize = false;
+        this->rrt = nullptr;
+    };
+
     ~Application() = default;
 
-    void initialize();
+    bool initialize();
+    void run();
+
+    bool isGotStartPos;
+    bool isGotEndPos;
+    bool isGotMapSize;
+    Eigen::Vector2f start_pos;
+    Eigen::Vector2f end_pos;
+    Eigen::Vector2f map_size;
 private:
-    nav2_map_server::MapServer* map_server;
     RRT* rrt;
 };
 
