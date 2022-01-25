@@ -1,14 +1,14 @@
 #include "RRT.hpp"
 #include "catch2/catch_all.hpp"
 
-Node* RRT::getRandomNode() {
+TreeNode* RRT::getRandomNode() {
     std::random_device rd;
     std::default_random_engine eng(rd());
     std::uniform_real_distribution<float> urd(0, 1);
 
     Eigen::Vector2f random_pos(urd(eng) * map_size.x(), urd(eng) * map_size.y());
-    Node* random_node = new Node(nullptr, random_pos);
-    Node* nearest = getNearest(random_node);
+    TreeNode* random_node = new TreeNode(nullptr, random_pos);
+    TreeNode* nearest = getNearest(random_node);
 
     Eigen::Vector2f vector = random_node->getPosition() - nearest->getPosition();
     Eigen::Vector2f unit_vector = vector / vector.norm();
@@ -27,7 +27,7 @@ Node* RRT::getRandomNode() {
     return random_node;
 }
 
-float RRT::getDistance(Node* a, Node* b) {
+float RRT::getDistance(TreeNode* a, TreeNode* b) {
     Eigen::Vector2f a_pos = a->getPosition();
     Eigen::Vector2f b_pos = b->getPosition();
     float x_diff = abs(a_pos.x() - b_pos.x());
@@ -36,8 +36,8 @@ float RRT::getDistance(Node* a, Node* b) {
     return sqrtf(x_diff * x_diff + y_diff * y_diff);
 }
 
-Node* RRT::getNearest(Node* node) {
-    Node* nearest;
+TreeNode* RRT::getNearest(TreeNode* node) {
+    TreeNode* nearest;
     float min_distance = sqrtf(map_size.x() * map_size.x() + map_size.y() * map_size.y());
 
     for (auto& node_iter : this->node_list) {
@@ -52,7 +52,7 @@ Node* RRT::getNearest(Node* node) {
     return nearest;
 }
 
-void RRT::addNode(Node* node, Node* parent) {
+void RRT::addNode(TreeNode* node, TreeNode* parent) {
     node->setParent(parent);
     parent->addChild(node);
     this->node_list.push_back(node);
@@ -85,23 +85,23 @@ void RRT::setGetMaxLoopCount(const int& max_loop_count_) {
     this->max_loop_count = max_loop_count_;
 }
 
-Node* RRT::getStartNode() {
+TreeNode* RRT::getStartNode() {
     return this->start_node;
 }
 
-Node* RRT::getEndNode() {
+TreeNode* RRT::getEndNode() {
     return this->end_node;
 }
 
-Node* RRT::getLastNode() {
+TreeNode* RRT::getLastNode() {
     return this->last_node;
 }
 
-std::vector<Node*> RRT::getNodeList() {
+std::vector<TreeNode*> RRT::getNodeList() {
     return this->node_list;
 }
 
-void RRT::addPathNode(Node* node) {
+void RRT::addPathNode(TreeNode* node) {
     if (node == nullptr) {
         return;
     }
@@ -109,7 +109,7 @@ void RRT::addPathNode(Node* node) {
     this->path.push_back(node);
 }
 
-std::vector<Node*> RRT::getPath() {
+std::vector<TreeNode*> RRT::getPath() {
     return this->path;
 }
 
@@ -162,7 +162,7 @@ TEST_CASE("RRT TEST", "[rrt]") {
     REQUIRE(rrt.getEndNode()->getPosition().y() == 470);
 
     rrt.setStepSize(1);
-    Node* random = rrt.getRandomNode();
+    TreeNode* random = rrt.getRandomNode();
     float distance = rrt.getDistance(rrt.getStartNode(), random);
 
     REQUIRE(random->getId() == 3);

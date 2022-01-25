@@ -1,17 +1,17 @@
 #include "TreeNode.hpp"
 #include "catch2/catch_all.hpp"
 
-int Node::count = 1;
+int TreeNode::count = 1;
 
-int Node::getId() {
+int TreeNode::getId() {
     return this->id;
 }
 
-std::vector<Node*> Node::getChildren() {
+std::vector<TreeNode*> TreeNode::getChildren() {
     return this->children;
 }
 
-void Node::addChild(Node* node) {
+void TreeNode::addChild(TreeNode* node) {
     for (auto& iter : this->children) {
         if (iter->getId() == node->getId()) {
             return;
@@ -21,28 +21,28 @@ void Node::addChild(Node* node) {
     this->children.push_back(node);
 }
 
-void Node::removeChild(Node* node) {
+void TreeNode::removeChild(TreeNode* node) {
     this->children.erase(std::remove(this->children.begin(), this->children.end(), node),
                          this->children.end());
 }
 
-Node* Node::getParent() {
+TreeNode* TreeNode::getParent() {
     return this->parent;
 }
 
-void Node::setParent(Node* node) {
+void TreeNode::setParent(TreeNode* node) {
     this->parent = node;
 }
 
-void Node::removeParent() {
+void TreeNode::removeParent() {
     this->parent = nullptr;
 }
 
-Eigen::Vector2f Node::getPosition() {
+Eigen::Vector2f TreeNode::getPosition() {
     return this->position;
 }
 
-void Node::setPosition(const Eigen::Vector2f& position) {
+void TreeNode::setPosition(const Eigen::Vector2f& position) {
     this->position = position;
 }
 
@@ -72,10 +72,10 @@ int main(int argc, char** argv) {
 
 }
 
-TEST_CASE("Node TEST", "[node]") {
-    Node parent;
+TEST_CASE("TreeNode TEST", "[tree_node]") {
+    TreeNode parent;
     Eigen::Vector2f position(77, 777);
-    Node node(&parent, position);
+    TreeNode node(&parent, position);
 
     REQUIRE(parent.getId() == 0);
     REQUIRE(parent.getChildren().size() == 1);
@@ -87,7 +87,7 @@ TEST_CASE("Node TEST", "[node]") {
 
 
     Eigen::Vector2f new_position(11, 111);
-    Node new_parent(&parent, new_position);
+    TreeNode new_parent(&parent, new_position);
     node.setParent(&new_parent);
 
     REQUIRE(new_parent.getId() == 2);
