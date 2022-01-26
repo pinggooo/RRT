@@ -7,13 +7,13 @@ Application::Application() : Node("rrt_simulator"){
     this->isFinished = false;
     this->rrt = nullptr;
 
-    auto qos_profile = rclcpp::QoS(rclcpp::KeepLast(1));
+    rrt_path_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("path_point", rclcpp::QoS(rclcpp::KeepAll()));
     start_pos_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-            "initialpose", qos_profile, std::bind(&Application::startPosCallback_, this, std::placeholders::_1));
+            "initialpose", rclcpp::QoS(rclcpp::KeepLast(1)), std::bind(&Application::startPosCallback_, this, std::placeholders::_1));
     end_pos_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            "goal_pose", qos_profile, std::bind(&Application::endPosCallback_, this, std::placeholders::_1));
+            "goal_pose", rclcpp::QoS(rclcpp::KeepLast(1)), std::bind(&Application::endPosCallback_, this, std::placeholders::_1));
     map_data_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-            "map", qos_profile, std::bind(&Application::mapDataCallback_, this, std::placeholders::_1));
+            "map", rclcpp::QoS(rclcpp::KeepLast(1)), std::bind(&Application::mapDataCallback_, this, std::placeholders::_1));
 }
 
 bool Application::initialize() {
@@ -38,7 +38,15 @@ void Application::run() {
         }
 
         rrt->addNode(random_node, rrt->getLastNode());
-        RCLCPP_INFO(this->get_logger(), "Node %d is made!", random_node->getId());
+
+        auto point_ = geometry_msgs::msg::PointStamped();
+        point_.header.frame_id = "map";
+        point_.point.x = random_node->getPosition().x();
+        point_.point.y = random_node->getPosition().y();
+        point_.point.z = 0;
+        this->rrt_path_pub_->publish(point_);
+        rclcpp::sleep_for(std::chrono::nanoseconds(100000000));
+        RCLCPP_INFO(this->get_logger(), "Node %d is made! (%f, %f)", random_node->getId(), random_node->getPosition().x(), random_node->getPosition().y());
 
         if (rrt->isReached()) {
             Eigen::Vector2f last_pos = rrt->getLastNode()->getPosition();
@@ -79,10 +87,10 @@ void Application::endPosCallback_(const geometry_msgs::msg::PoseStamped::SharedP
 
 void Application::mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     if (!this->isGotMapSize) {
-        this->map_size.x() = float(msg->info.width);
-        this->map_size.y() = float(msg->info.height);
+        this->map_size.x() = float(msg->info.width * msg->info.resolution);
+        this->map_size.y() = float(msg->info.height * msg->info.resolution);
         this->isGotMapSize = true;
 
-        RCLCPP_INFO(this->get_logger(), "Map is Loaded! Map Size: [%fx%f]", float(msg->info.width), float(msg->info.height));
+        RCLCPP_INFO(this->get_logger(), "Map is Loaded! Map Size: [%fx%f]", float(this->map_size.x()), float(this->map_size.y()));
     }
 }

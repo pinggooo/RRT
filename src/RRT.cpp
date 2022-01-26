@@ -60,7 +60,7 @@ void RRT::addNode(TreeNode* node, TreeNode* parent) {
 }
 
 bool RRT::isReached() {
-    if (getDistance(last_node, end_node) <= END_REACH_THRESHOLD) {
+    if (getDistance(last_node, end_node) <= end_reach_threshold) {
         end_node = last_node;
 
         return true;
@@ -75,6 +75,7 @@ int RRT::getStepSize() {
 
 void RRT::setStepSize(const int& step_size_) {
     this->step_size = step_size_;
+    this->end_reach_threshold = float(step_size_ / 2.0);
 }
 
 int RRT::getMaxLoopCount() {

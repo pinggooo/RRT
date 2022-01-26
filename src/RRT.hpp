@@ -4,8 +4,6 @@
 #include <random>
 #include "TreeNode.hpp"
 
-#define END_REACH_THRESHOLD 0.1
-
 class RRT {
 public:
     RRT(const Eigen::Vector2f& start_pos, const Eigen::Vector2f& end_pos, const Eigen::Vector2f& map_size) {
@@ -27,6 +25,8 @@ public:
         this->map_size = map_size;
     }
 
+    ~RRT() = default;
+
     TreeNode* getRandomNode();
     float getDistance(TreeNode* a, TreeNode* b);
     TreeNode* getNearest(TreeNode* node);
@@ -44,8 +44,9 @@ public:
     std::vector<TreeNode*> getPath();
 
 private:
-    int step_size = 5;
+    int step_size = 1;
     int max_loop_count = 1000;
+    float end_reach_threshold = 0.5;
     TreeNode* start_node;
     TreeNode* end_node;
     TreeNode* last_node;

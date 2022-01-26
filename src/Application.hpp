@@ -3,10 +3,13 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/point_stamped.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "nav_msgs/msg/map_meta_data.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "RRT.hpp"
+
+#include <chrono>
 
 class Application : public rclcpp::Node {
 public:
@@ -29,6 +32,7 @@ private:
     void mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
 
     RRT* rrt;
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr rrt_path_pub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr start_pos_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr end_pos_sub_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_data_sub_;
