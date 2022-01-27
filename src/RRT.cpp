@@ -16,6 +16,10 @@ TreeNode* RRT::getRandomNode() {
     random_pos = nearest->getPosition() + unit_vector * this->step_size;
     random_node->setPosition(random_pos);
 
+    if (isObstacle(random_pos)) {
+        return nullptr;
+    }
+
     if (random_pos.x() < 0 || random_pos.x() > map_size.x()) {
         return nullptr;
     }
@@ -57,6 +61,18 @@ void RRT::addNode(TreeNode* node, TreeNode* parent) {
     parent->addChild(node);
     this->node_list.push_back(node);
     this->last_node = node;
+}
+
+bool RRT::isObstacle(const Eigen::Vector2f& position) {
+    Eigen::Vector2f pixel_size(map_size.x() / map_resolution, map_size.y() / map_resolution);
+    int x = int(position.x() / pixel_size.y());
+    int y = int(position.y() / pixel_size.y());
+
+    if (map[10 * y + x] >= 50) {
+        return true;
+    }
+
+    return false;
 }
 
 bool RRT::isReached() {

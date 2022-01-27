@@ -5,9 +5,12 @@ Application::Application() : Node("rrt_simulator"){
     this->isGotEndPos = false;
     this->isGotMapSize = false;
     this->isFinished = false;
+    this->isMaxLoopOver = true;
     this->rrt = nullptr;
 
-    rrt_path_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("path_point", rclcpp::QoS(rclcpp::KeepAll()));
+    rrt_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("path_point", rclcpp::QoS(rclcpp::KeepAll()));
+    rrt_path_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("path_line", rclcpp::QoS(rclcpp::KeepAll()));
+
     start_pos_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "initialpose", rclcpp::QoS(rclcpp::KeepLast(1)), std::bind(&Application::startPosCallback_, this, std::placeholders::_1));
     end_pos_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
@@ -19,7 +22,7 @@ Application::Application() : Node("rrt_simulator"){
 bool Application::initialize() {
     if (isGotStartPos && isGotEndPos && isGotMapSize) {
         if (rrt == nullptr) {
-            this->rrt = new RRT(start_pos, end_pos, map_size);
+            this->rrt = new RRT(start_pos, end_pos, map, map_size, map_resolution);
             RCLCPP_INFO(this->get_logger(), "RRT is Initialized! Map Size: [%fx%f]", map_size.x(), map_size.y());
         }
 
@@ -38,31 +41,65 @@ void Application::run() {
         }
 
         rrt->addNode(random_node, rrt->getLastNode());
-
-        auto point_ = geometry_msgs::msg::PointStamped();
-        point_.header.frame_id = "map";
-        point_.point.x = random_node->getPosition().x();
-        point_.point.y = random_node->getPosition().y();
-        point_.point.z = 0;
-        this->rrt_path_pub_->publish(point_);
-        rclcpp::sleep_for(std::chrono::nanoseconds(100000000));
-        RCLCPP_INFO(this->get_logger(), "Node %d is made! (%f, %f)", random_node->getId(), random_node->getPosition().x(), random_node->getPosition().y());
+        drawPathPoint(random_node);
 
         if (rrt->isReached()) {
+            this->isMaxLoopOver = false;
             Eigen::Vector2f last_pos = rrt->getLastNode()->getPosition();
             RCLCPP_INFO(this->get_logger(), "RRT is reached at end position! (%f, %f)", last_pos.x(), last_pos.y());
             break;
         }
     }
 
-    TreeNode* node = rrt->getLastNode();
+    if (isMaxLoopOver) {
+        RCLCPP_INFO(this->get_logger(), "Loop is over max loop count(%d)!", rrt->getMaxLoopCount());
+        isFinished = true;
+
+        return;
+    }
+
+    drawPathLine(rrt->getLastNode());
+    isFinished = true;
+}
+
+void Application::drawPathPoint(TreeNode* node) {
+    auto point_ = geometry_msgs::msg::PointStamped();
+
+    point_.header.frame_id = "map";
+    point_.point.x = node->getPosition().x();
+    point_.point.y = node->getPosition().y();
+    point_.point.z = 0;
+
+    this->rrt_point_pub_->publish(point_);
+    rclcpp::sleep_for(std::chrono::nanoseconds(100000000));
+
+    RCLCPP_INFO(this->get_logger(), "Node %d is made! (%f, %f)", node->getId(), node->getPosition().x(), node->getPosition().y());
+}
+
+void Application::drawPathLine(TreeNode* node) {
+    visualization_msgs::msg::Marker line_strip_;
+
+    line_strip_.id = node->getId();
+    line_strip_.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    line_strip_.action = visualization_msgs::msg::Marker::ADD;
+    line_strip_.scale.x = 1.0;
+    line_strip_.color.g = 1.0f;
+    line_strip_.color.a = 1.0;
 
     while (node != nullptr) {
+        geometry_msgs::msg::Point point_;
+        point_.x = node->getPosition().x();
+        point_.y = node->getPosition().y();
+        point_.z = 0;
+        line_strip_.points.push_back(point_);
+
         rrt->addPathNode(node);
         node = node->getParent();
     }
 
-    isFinished = true;
+    rrt_path_pub_->publish(line_strip_);
+
+    RCLCPP_INFO(this->get_logger(), "The path is created!");
 }
 
 void Application::startPosCallback_(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
@@ -90,6 +127,8 @@ void Application::mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr
         this->map_size.x() = float(msg->info.width * msg->info.resolution);
         this->map_size.y() = float(msg->info.height * msg->info.resolution);
         this->isGotMapSize = true;
+        this->map = msg->data;
+        this->map_resolution = msg->info.resolution;
 
         RCLCPP_INFO(this->get_logger(), "Map is Loaded! Map Size: [%fx%f]", float(this->map_size.x()), float(this->map_size.y()));
     }
