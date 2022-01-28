@@ -32,8 +32,8 @@ public:
     std::vector<int8_t> map;
     float map_resolution;
 private:
-    void drawPathPoint(TreeNode* node);
-    void drawPathLine(TreeNode* node);
+    void drawPathPoint_(TreeNode* node);
+    void drawPathLine_(const std::vector<TreeNode*>& path);
 
     void startPosCallback_(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
     void endPosCallback_(const geometry_msgs::msg::PoseStamped::SharedPtr msg);

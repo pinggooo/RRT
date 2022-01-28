@@ -28,6 +28,8 @@ TreeNode* RRT::getRandomNode() {
         return nullptr;
     }
 
+    addNode(random_node, nearest);
+
     return random_node;
 }
 
@@ -77,8 +79,6 @@ bool RRT::isObstacle(const Eigen::Vector2f& position) {
 
 bool RRT::isReached() {
     if (getDistance(last_node, end_node) <= end_reach_threshold) {
-        end_node = last_node;
-
         return true;
     }
 
@@ -118,12 +118,25 @@ std::vector<TreeNode*> RRT::getNodeList() {
     return this->node_list;
 }
 
-void RRT::addPathNode(TreeNode* node) {
+void RRT::updatePath(TreeNode* node) {
     if (node == nullptr) {
         return;
     }
 
-    this->path.push_back(node);
+    std::vector<TreeNode*> new_path;
+
+    while (node != nullptr) {
+        new_path.push_back(node);
+        node = node->getParent();
+    }
+
+    if (this->path.empty() || (!this->path.empty() && new_path.size() < this->path.size())) {
+        this->path.clear();
+
+        for (auto new_node : new_path) {
+            this->path.push_back(new_node);
+        }
+    }
 }
 
 std::vector<TreeNode*> RRT::getPath() {

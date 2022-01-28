@@ -33,12 +33,12 @@ public:
     TreeNode* getEndNode();
     TreeNode* getLastNode();
     std::vector<TreeNode*> getNodeList();
-    void addPathNode(TreeNode* node);
+    void updatePath(TreeNode* node);
     std::vector<TreeNode*> getPath();
 
 private:
     int step_size = 2;
-    int max_loop_count = 2000;
+    int max_loop_count = 5000;
     float end_reach_threshold = 2;
     TreeNode* start_node;
     TreeNode* end_node;

@@ -40,29 +40,25 @@ void Application::run() {
             continue;
         }
 
-        rrt->addNode(random_node, rrt->getLastNode());
-        drawPathPoint(random_node);
+        drawPathPoint_(random_node);
 
         if (rrt->isReached()) {
             this->isMaxLoopOver = false;
+            rrt->updatePath(rrt->getLastNode());
             Eigen::Vector2f last_pos = rrt->getLastNode()->getPosition();
             RCLCPP_INFO(this->get_logger(), "RRT is reached at end position! (%f, %f)", last_pos.x(), last_pos.y());
-            break;
         }
     }
 
     if (isMaxLoopOver) {
         RCLCPP_INFO(this->get_logger(), "Loop is over max loop count(%d)!", rrt->getMaxLoopCount());
-        isFinished = true;
-
-        return;
     }
 
-    drawPathLine(rrt->getLastNode());
+    drawPathLine_(rrt->getPath());
     isFinished = true;
 }
 
-void Application::drawPathPoint(TreeNode* node) {
+void Application::drawPathPoint_(TreeNode* node) {
     auto point_ = geometry_msgs::msg::PointStamped();
 
     point_.header.frame_id = "map";
@@ -76,28 +72,32 @@ void Application::drawPathPoint(TreeNode* node) {
     RCLCPP_INFO(this->get_logger(), "Node %d is made! (%f, %f)", node->getId(), node->getPosition().x(), node->getPosition().y());
 }
 
-void Application::drawPathLine(TreeNode* node) {
+void Application::drawPathLine_(const std::vector<TreeNode*>& path) {
+    if (path.empty()) {
+        RCLCPP_INFO(this->get_logger(), "Any path is not discovered...");
+        return;
+    }
+
     visualization_msgs::msg::Marker line_strip_;
 
-    line_strip_.id = node->getId();
+    line_strip_.id = path[0]->getId();
     line_strip_.type = visualization_msgs::msg::Marker::LINE_STRIP;
     line_strip_.action = visualization_msgs::msg::Marker::ADD;
-    line_strip_.scale.x = 1.0;
-    line_strip_.color.g = 1.0f;
+    line_strip_.header.frame_id = "map";
+    line_strip_.scale.x = 0.2;
+    line_strip_.color.b = 1.0;
     line_strip_.color.a = 1.0;
 
-    while (node != nullptr) {
+    for (auto node : path) {
         geometry_msgs::msg::Point point_;
         point_.x = node->getPosition().x();
         point_.y = node->getPosition().y();
         point_.z = 0;
         line_strip_.points.push_back(point_);
-
-        rrt->addPathNode(node);
-        node = node->getParent();
     }
 
     rrt_path_pub_->publish(line_strip_);
+    rclcpp::sleep_for(std::chrono::nanoseconds(100000000));
 
     RCLCPP_INFO(this->get_logger(), "The path is created!");
 }
