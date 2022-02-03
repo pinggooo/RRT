@@ -6,6 +6,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/point_stamped.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "nav_msgs/msg/path.hpp"
 #include "nav_msgs/msg/map_meta_data.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "visualization_msgs/msg/marker.hpp"
@@ -29,11 +30,13 @@ public:
     Eigen::Vector2f start_pos;
     Eigen::Vector2f end_pos;
     Eigen::Vector2f map_size;
+    Eigen::Vector2f map_origin;
     std::vector<int8_t> map;
     float map_resolution;
 private:
     void drawPathPoint_(TreeNode* node);
     void drawPathLine_(const std::vector<TreeNode*>& path);
+    void publishWayPoints_(std::vector<TreeNode*> path);
 
     void startPosCallback_(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
     void endPosCallback_(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
@@ -42,6 +45,7 @@ private:
     RRT* rrt;
     rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr rrt_point_pub_;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr rrt_path_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr waypoint_pub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr start_pos_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr end_pos_sub_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_data_sub_;

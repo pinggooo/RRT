@@ -20,11 +20,11 @@ TreeNode* RRT::getRandomNode() {
         return nullptr;
     }
 
-    if (random_pos.x() < 0 || random_pos.x() > map_size.x()) {
+    if (random_pos.x() < map_origin.x() || random_pos.x() > map_origin.x() + map_size.x()) {
         return nullptr;
     }
 
-    if (random_pos.y() < 0 || random_pos.y() > map_size.y()) {
+    if (random_pos.y() < map_origin.x() || random_pos.y() > map_origin.y() + map_size.y()) {
         return nullptr;
     }
 
@@ -66,11 +66,11 @@ void RRT::addNode(TreeNode* node, TreeNode* parent) {
 }
 
 bool RRT::isObstacle(const Eigen::Vector2f& position) {
-    Eigen::Vector2f pixel_size(map_size.x() / map_resolution, map_size.y() / map_resolution);
-    int x = int(position.x() / pixel_size.y());
-    int y = int(position.y() / pixel_size.y());
+    int x = int(position.x() / map_resolution);
+    int y = int(position.y() / map_resolution);
+    int index = int(map_size.x() / map_resolution) * y + x;
 
-    if (map[10 * y + x] >= 50) {
+    if (map[index] == -1 || map[index] >= 65) {
         return true;
     }
 
@@ -85,13 +85,13 @@ bool RRT::isReached() {
     return false;
 }
 
-int RRT::getStepSize() {
+float RRT::getStepSize() {
     return this->step_size;
 }
 
-void RRT::setStepSize(const int& step_size_) {
+void RRT::setStepSize(const float& step_size_) {
     this->step_size = step_size_;
-    this->end_reach_threshold = float(step_size_ / 2.0);
+    this->end_reach_threshold = step_size_ / 2.0f;
 }
 
 int RRT::getMaxLoopCount() {
