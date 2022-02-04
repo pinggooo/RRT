@@ -7,7 +7,6 @@ Application::Application() : Node("rrt_simulator"){
     this->isFinished = false;
     this->isMaxLoopOver = true;
     this->rrt = nullptr;
-    this->map_resolution = 1.0;
 
     start_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("start_point", rclcpp::QoS(rclcpp::KeepAll()));
     end_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("end_point", rclcpp::QoS(rclcpp::KeepAll()));
