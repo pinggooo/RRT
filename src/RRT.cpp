@@ -6,7 +6,7 @@ TreeNode* RRT::getRandomNode() {
     std::default_random_engine eng(rd());
     std::uniform_real_distribution<float> urd(0, 1);
 
-    Eigen::Vector2f random_pos(urd(eng) * map_size.x(), urd(eng) * map_size.y());
+    Eigen::Vector2f random_pos(map_origin.x() + urd(eng) * map_size.x(), map_origin.y() + urd(eng) * map_size.y());
     TreeNode* random_node = new TreeNode(nullptr, random_pos);
     TreeNode* nearest = getNearest(random_node);
 
@@ -66,8 +66,8 @@ void RRT::addNode(TreeNode* node, TreeNode* parent) {
 }
 
 bool RRT::isObstacle(const Eigen::Vector2f& position) {
-    int x = int(position.x() / map_resolution);
-    int y = int(position.y() / map_resolution);
+    int x = int((position.x() - map_origin.x()) / map_resolution);
+    int y = int((position.y() - map_origin.y()) / map_resolution);
     int index = int(map_size.x() / map_resolution) * y + x;
 
     if (map[index] == -1 || map[index] >= 65) {

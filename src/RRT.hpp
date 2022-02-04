@@ -16,8 +16,8 @@ public:
         this->map_size = map_size;
         this->map_origin = map_origin;
         this->map_resolution = map_resolution;
-        this->step_size = float(std::max(map_size.x(), map_size.y()) / 100.0);
-        this->end_reach_threshold = float(step_size / 2.0);
+        this->step_size = float(std::max(map_size.x(), map_size.y()) / 200.0);
+        this->end_reach_threshold = float(step_size / 1.5);
     }
 
     ~RRT() = default;
@@ -41,7 +41,7 @@ public:
 
 private:
     float step_size = 2;
-    int max_loop_count = 1000;
+    int max_loop_count = 20000;
     float end_reach_threshold = 1;
     TreeNode* start_node;
     TreeNode* end_node;

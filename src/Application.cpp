@@ -9,9 +9,11 @@ Application::Application() : Node("rrt_simulator"){
     this->rrt = nullptr;
     this->map_resolution = 1.0;
 
-    rrt_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("path_point", rclcpp::QoS(rclcpp::KeepAll()));
-    rrt_path_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("path_line", rclcpp::QoS(rclcpp::KeepAll()));
-    waypoint_pub_ = this->create_publisher<nav_msgs::msg::Path>("plan", rclcpp::QoS(rclcpp::KeepAll()));
+    start_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("start_point", rclcpp::QoS(rclcpp::KeepAll()));
+    end_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("end_point", rclcpp::QoS(rclcpp::KeepAll()));
+    rrt_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("path_point", rclcpp::QoS(rclcpp::KeepAll()).best_effort());
+    rrt_line_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("path_line", rclcpp::QoS(rclcpp::KeepAll()).best_effort());
+    rrt_path_pub_ = this->create_publisher<nav_msgs::msg::Path>("final_path", rclcpp::QoS(rclcpp::KeepAll()).best_effort());
 
     start_pos_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "initialpose", rclcpp::QoS(rclcpp::KeepLast(1)), std::bind(&Application::startPosCallback_, this, std::placeholders::_1));
@@ -35,6 +37,8 @@ bool Application::initialize() {
 }
 
 void Application::run() {
+    auto start_time = std::chrono::steady_clock::now();
+
     for (int i = 0; i < rrt->getMaxLoopCount(); i++) {
         TreeNode* random_node = rrt->getRandomNode();
 
@@ -49,6 +53,7 @@ void Application::run() {
             rrt->updatePath(rrt->getLastNode());
             Eigen::Vector2f last_pos = rrt->getLastNode()->getPosition();
             RCLCPP_INFO(this->get_logger(), "RRT is reached at end position! (%f, %f)", last_pos.x(), last_pos.y());
+            break;
         }
     }
 
@@ -56,13 +61,15 @@ void Application::run() {
         RCLCPP_INFO(this->get_logger(), "Loop is over max loop count(%d)!", rrt->getMaxLoopCount());
     }
 
-    publishWayPoints_(rrt->getPath());
     drawPathLine_(rrt->getPath());
+
+    auto end_time = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
     isFinished = true;
 }
 
 void Application::drawPathPoint_(TreeNode* node) {
-    auto point_ = geometry_msgs::msg::PointStamped();
+    geometry_msgs::msg::PointStamped point_;
 
     point_.header.frame_id = "map";
     point_.point.x = node->getPosition().x();
@@ -70,8 +77,30 @@ void Application::drawPathPoint_(TreeNode* node) {
     point_.point.z = 0;
 
     this->rrt_point_pub_->publish(point_);
-    rclcpp::sleep_for(std::chrono::nanoseconds(100000000));
 
+    visualization_msgs::msg::Marker marker_;
+
+    marker_.id = node->getId();
+    marker_.type = visualization_msgs::msg::Marker::LINE_STRIP;
+    marker_.action = visualization_msgs::msg::Marker::ADD;
+    marker_.header.frame_id = "map";
+    marker_.scale.x = 0.01;
+    marker_.color.a = 1.0;
+
+    geometry_msgs::msg::Point line_point_;
+    geometry_msgs::msg::Point line_parent_;
+
+    line_point_.x = node->getPosition().x();
+    line_point_.y = node->getPosition().y();
+    line_point_.z = 0;
+    line_parent_.x = node->getParent()->getPosition().x();
+    line_parent_.y = node->getParent()->getPosition().y();
+    line_parent_.z = 0;
+
+    marker_.points.push_back(line_parent_);
+    marker_.points.push_back(line_point_);
+
+    rrt_line_pub_->publish(marker_);
     RCLCPP_INFO(this->get_logger(), "Node %d is made! (%f, %f)", node->getId(), node->getPosition().x(), node->getPosition().y());
 }
 
@@ -81,44 +110,20 @@ void Application::drawPathLine_(const std::vector<TreeNode*>& path) {
         return;
     }
 
-    visualization_msgs::msg::Marker line_strip_;
-
-    line_strip_.id = path[0]->getId();
-    line_strip_.type = visualization_msgs::msg::Marker::LINE_STRIP;
-    line_strip_.action = visualization_msgs::msg::Marker::ADD;
-    line_strip_.header.frame_id = "map";
-    line_strip_.scale.x = 0.2;
-    line_strip_.color.b = 1.0;
-    line_strip_.color.a = 1.0;
+    nav_msgs::msg::Path path_;
+    path_.header.frame_id = "map";
 
     for (auto node : path) {
-        geometry_msgs::msg::Point point_;
-        point_.x = node->getPosition().x();
-        point_.y = node->getPosition().y();
-        point_.z = 0;
-        line_strip_.points.push_back(point_);
-    }
-
-    rrt_path_pub_->publish(line_strip_);
-    rclcpp::sleep_for(std::chrono::nanoseconds(100000000));
-
-    RCLCPP_INFO(this->get_logger(), "The path is created!");
-}
-
-void Application::publishWayPoints_(std::vector<TreeNode*> path) {
-    nav_msgs::msg::Path waypoints_;
-    waypoints_.header.frame_id = "map";
-
-    for (auto node = path.rbegin(); node != path.rend(); node++) {
         geometry_msgs::msg::PoseStamped pose_;
-        pose_.pose.position.x = (*node)->getPosition().x();
-        pose_.pose.position.y = (*node)->getPosition().y();
+        pose_.header.frame_id = "map";
+        pose_.pose.position.x = node->getPosition().x();
+        pose_.pose.position.y = node->getPosition().y();
         pose_.pose.position.z = 0;
-
-        waypoints_.poses.push_back(pose_);
+        path_.poses.push_back(pose_);
     }
 
-    waypoint_pub_->publish(waypoints_);
+    rrt_path_pub_->publish(path_);
+    RCLCPP_INFO(this->get_logger(), "The path is created!");
 }
 
 void Application::startPosCallback_(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
@@ -127,6 +132,13 @@ void Application::startPosCallback_(const geometry_msgs::msg::PoseWithCovariance
         this->start_pos.y() = float(msg->pose.pose.position.y);
         this->isGotStartPos = true;
 
+        geometry_msgs::msg::PointStamped start_point_;
+        start_point_.header.frame_id = "map";
+        start_point_.point.x = this->start_pos.x();
+        start_point_.point.y = this->start_pos.y();
+        start_point_.point.z = 0;
+
+        start_point_pub_->publish(start_point_);
         RCLCPP_INFO(this->get_logger(), "Start Position is Selected! (%f, %f)", this->start_pos.x(), this->start_pos.y());
     }
 }
@@ -137,6 +149,13 @@ void Application::endPosCallback_(const geometry_msgs::msg::PoseStamped::SharedP
         this->end_pos.y() = float(msg->pose.position.y);
         this->isGotEndPos = true;
 
+        geometry_msgs::msg::PointStamped end_point_;
+        end_point_.header.frame_id = "map";
+        end_point_.point.x = this->end_pos.x();
+        end_point_.point.y = this->end_pos.y();
+        end_point_.point.z = 0;
+
+        end_point_pub_->publish(end_point_);
         RCLCPP_INFO(this->get_logger(), "End Position is Selected! (%f, %f)", this->end_pos.x(), this->end_pos.y());
     }
 }

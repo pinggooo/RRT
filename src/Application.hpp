@@ -27,25 +27,30 @@ public:
     bool isGotMapSize;
     bool isFinished;
     bool isMaxLoopOver;
-    Eigen::Vector2f start_pos;
-    Eigen::Vector2f end_pos;
+
+    std::vector<int8_t> map;
     Eigen::Vector2f map_size;
     Eigen::Vector2f map_origin;
-    std::vector<int8_t> map;
     float map_resolution;
+    Eigen::Vector2f start_pos;
+    Eigen::Vector2f end_pos;
+
 private:
     void drawPathPoint_(TreeNode* node);
     void drawPathLine_(const std::vector<TreeNode*>& path);
-    void publishWayPoints_(std::vector<TreeNode*> path);
 
     void startPosCallback_(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
     void endPosCallback_(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
 
     RRT* rrt;
+
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr start_point_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr end_point_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr rrt_point_pub_;
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr rrt_path_pub_;
-    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr waypoint_pub_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr rrt_line_pub_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr rrt_path_pub_;
+
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr start_pos_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr end_pos_sub_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_data_sub_;
