@@ -1,12 +1,13 @@
 #include "Application.hpp"
 
-Application::Application() : Node("rrt_simulator"){
+Application::Application() : Node("rrt_simulator") {
     this->isGotStartPos = false;
     this->isGotEndPos = false;
     this->isGotMapSize = false;
     this->isFinished = false;
     this->isMaxLoopOver = true;
     this->rrt = nullptr;
+    this->map = new Map();
 
     start_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("start_point", rclcpp::QoS(rclcpp::KeepAll()));
     end_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("end_point", rclcpp::QoS(rclcpp::KeepAll()));
@@ -25,8 +26,8 @@ Application::Application() : Node("rrt_simulator"){
 bool Application::initialize() {
     if (isGotStartPos && isGotEndPos && isGotMapSize) {
         if (rrt == nullptr) {
-            this->rrt = new RRT(start_pos, end_pos, map, map_size, map_origin, map_resolution);
-            RCLCPP_INFO(this->get_logger(), "RRT is Initialized! Map Size: [%fx%f]", map_size.x(), map_size.y());
+            this->rrt = new RRT(map);
+            RCLCPP_INFO(this->get_logger(), "RRT is Initialized! Map Size: [%fx%f]", map->getMapSize().x(), map->getMapSize().y());
         }
 
         return true;
@@ -60,6 +61,7 @@ void Application::run() {
         RCLCPP_INFO(this->get_logger(), "Loop is over max loop count(%d)!", rrt->getMaxLoopCount());
     }
 
+    rrt->refinePath();
     drawPathLine_(rrt->getPath());
 
     auto end_time = std::chrono::steady_clock::now();
@@ -127,47 +129,48 @@ void Application::drawPathLine_(const std::vector<TreeNode*>& path) {
 
 void Application::startPosCallback_(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
     if (!this->isGotStartPos) {
-        this->start_pos.x() = float(msg->pose.pose.position.x);
-        this->start_pos.y() = float(msg->pose.pose.position.y);
+        Eigen::Vector2f start_pos(float(msg->pose.pose.position.x), float(msg->pose.pose.position.y));
+        this->map->setStartPos(start_pos);
         this->isGotStartPos = true;
 
         geometry_msgs::msg::PointStamped start_point_;
         start_point_.header.frame_id = "map";
-        start_point_.point.x = this->start_pos.x();
-        start_point_.point.y = this->start_pos.y();
+        start_point_.point.x = this->map->getStartPos().x();
+        start_point_.point.y = this->map->getStartPos().y();
         start_point_.point.z = 0;
 
         start_point_pub_->publish(start_point_);
-        RCLCPP_INFO(this->get_logger(), "Start Position is Selected! (%f, %f)", this->start_pos.x(), this->start_pos.y());
+        RCLCPP_INFO(this->get_logger(), "Start Position is Selected! (%f, %f)", this->map->getStartPos().x(), this->map->getStartPos().y());
     }
 }
 
 void Application::endPosCallback_(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
     if (!this->isGotEndPos) {
-        this->end_pos.x() = float(msg->pose.position.x);
-        this->end_pos.y() = float(msg->pose.position.y);
+        Eigen::Vector2f end_pos(float(msg->pose.position.x), float(msg->pose.position.y));
+        this->map->setEndPos(end_pos);
         this->isGotEndPos = true;
 
         geometry_msgs::msg::PointStamped end_point_;
         end_point_.header.frame_id = "map";
-        end_point_.point.x = this->end_pos.x();
-        end_point_.point.y = this->end_pos.y();
+        end_point_.point.x = this->map->getEndPos().x();
+        end_point_.point.y = this->map->getEndPos().y();
         end_point_.point.z = 0;
 
         end_point_pub_->publish(end_point_);
-        RCLCPP_INFO(this->get_logger(), "End Position is Selected! (%f, %f)", this->end_pos.x(), this->end_pos.y());
+        RCLCPP_INFO(this->get_logger(), "End Position is Selected! (%f, %f)", this->map->getEndPos().x(), this->map->getEndPos().y());
     }
 }
 
 void Application::mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     if (!this->isGotMapSize) {
-        this->map_size.x() = float(msg->info.width * msg->info.resolution);
-        this->map_size.y() = float(msg->info.height * msg->info.resolution);
+        Eigen::Vector2f map_size(float(msg->info.width * msg->info.resolution), float(msg->info.height * msg->info.resolution));
+        Eigen::Vector2f map_origin(msg->info.origin.position.x, msg->info.origin.position.y);
+        this->map->setMapSize(map_size);
+        this->map->setMapData(msg->data);
+        this->map->setMapOrigin(map_origin);
+        this->map->setMapResolution(msg->info.resolution);
         this->isGotMapSize = true;
-        this->map = msg->data;
-        this->map_origin = Eigen::Vector2f(msg->info.origin.position.x, msg->info.origin.position.y);
-        this->map_resolution = msg->info.resolution;
 
-        RCLCPP_INFO(this->get_logger(), "Map is Loaded! Map Size: [%fx%f]", float(this->map_size.x()), float(this->map_size.y()));
+        RCLCPP_INFO(this->get_logger(), "Map is Loaded! Map Size: [%.1fx%.1f]", float(this->map->getMapSize().x()), float(this->map->getMapSize().y()));
     }
 }

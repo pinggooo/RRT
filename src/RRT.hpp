@@ -3,20 +3,17 @@
 
 #include <random>
 #include "TreeNode.hpp"
+#include "Map.hpp"
 
 class RRT {
 public:
-    RRT(const Eigen::Vector2f& start_pos, const Eigen::Vector2f& end_pos, const std::vector<int8_t>& map,
-        const Eigen::Vector2f& map_size, const Eigen::Vector2f& map_origin, const float& map_resolution) {
-        this->start_node = new TreeNode(nullptr, start_pos);
-        this->end_node = new TreeNode(nullptr, end_pos);
+    RRT(Map* map) {
+        this->start_node = new TreeNode(nullptr, map->getStartPos());
+        this->end_node = new TreeNode(nullptr, map->getEndPos());
         this->last_node = start_node;
         this->node_list.push_back(start_node);
         this->map = map;
-        this->map_size = map_size;
-        this->map_origin = map_origin;
-        this->map_resolution = map_resolution;
-        this->step_size = float(std::max(map_size.x(), map_size.y()) / 200.0);
+        this->step_size = float(std::max(map->getMapSize().x(), map->getMapSize().y()) / 200.0);
         this->end_reach_threshold = float(step_size / 1.5);
     }
 
@@ -37,6 +34,7 @@ public:
     TreeNode* getLastNode();
     std::vector<TreeNode*> getNodeList();
     void updatePath(TreeNode* node);
+    void refinePath();
     std::vector<TreeNode*> getPath();
 
 private:
@@ -48,10 +46,7 @@ private:
     TreeNode* last_node;
     std::vector<TreeNode*> node_list;
     std::vector<TreeNode*> path;
-    std::vector<int8_t> map;
-    Eigen::Vector2f map_size;
-    Eigen::Vector2f map_origin;
-    float map_resolution;
+    Map* map;
 };
 
 #endif //RRT_RRT_HPP

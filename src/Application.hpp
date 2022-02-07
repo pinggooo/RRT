@@ -28,13 +28,6 @@ public:
     bool isFinished;
     bool isMaxLoopOver;
 
-    std::vector<int8_t> map;
-    Eigen::Vector2f map_size;
-    Eigen::Vector2f map_origin;
-    float map_resolution;
-    Eigen::Vector2f start_pos;
-    Eigen::Vector2f end_pos;
-
 private:
     void drawPathPoint_(TreeNode* node);
     void drawPathLine_(const std::vector<TreeNode*>& path);
@@ -44,6 +37,7 @@ private:
     void mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
 
     RRT* rrt;
+    Map* map;
 
     rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr start_point_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr end_point_pub_;
