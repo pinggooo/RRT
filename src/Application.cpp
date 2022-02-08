@@ -7,6 +7,7 @@ Application::Application() : Node("rrt_simulator") {
     this->isFinished = false;
     this->isMaxLoopOver = true;
     this->rrt = nullptr;
+    this->rrt_connect = nullptr;
     this->map = new Map();
 
     start_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("start_point", rclcpp::QoS(rclcpp::KeepAll()));
@@ -27,7 +28,12 @@ bool Application::initialize() {
     if (isGotStartPos && isGotEndPos && isGotMapSize) {
         if (rrt == nullptr) {
             this->rrt = new RRT(map);
-            RCLCPP_INFO(this->get_logger(), "RRT is Initialized! Map Size: [%fx%f]", map->getMapSize().x(), map->getMapSize().y());
+            RCLCPP_INFO(this->get_logger(), "RRT is Initialized!");
+        }
+
+        if (rrt_connect == nullptr) {
+            this->rrt_connect = new RRTConnect(map);
+            RCLCPP_INFO(this->get_logger(), "RRT Connect is Initialized!");
         }
 
         return true;
@@ -36,7 +42,7 @@ bool Application::initialize() {
     return false;
 }
 
-void Application::run() {
+void Application::runRRT() {
     auto start_time = std::chrono::steady_clock::now();
 
     for (int i = 0; i < rrt->getMaxLoopCount(); i++) {
@@ -66,6 +72,10 @@ void Application::run() {
 
     auto end_time = std::chrono::steady_clock::now();
     RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+    isFinished = true;
+}
+
+void Application::runRRTConnect() {
     isFinished = true;
 }
 

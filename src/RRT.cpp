@@ -70,13 +70,13 @@ void RRT::addNode(TreeNode* node, TreeNode* parent) {
 }
 
 bool RRT::isObstacle(const Eigen::Vector2f& position) {
-    std::vector<int8_t> map_data = map->getMapData();
-    Eigen::Vector2f map_origin = map->getMapOrigin();
-    Eigen::Vector2f map_size = map->getMapSize();
-    float map_resolution = map->getMapResolution();
+    std::vector<int8_t> map_data = this->map->getMapData();
+    Eigen::Vector2f map_origin = this->map->getMapOrigin();
+    Eigen::Vector2f map_size = this->map->getMapSize();
+    float map_resolution = this->map->getMapResolution();
 
-    int x = int(roundf((position.x() - map_origin.x()) / map_resolution));
-    int y = int(roundf((position.y() - map_origin.y()) / map_resolution));
+    int x = int((position.x() - map_origin.x()) / map_resolution);
+    int y = int((position.y() - map_origin.y()) / map_resolution);
     int index = int(map_size.x() / map_resolution) * y + x;
 
     if (map_data[index] == -1 || map_data[index] >= 65) {
@@ -100,7 +100,7 @@ float RRT::getStepSize() {
 
 void RRT::setStepSize(const float& step_size_) {
     this->step_size = step_size_;
-    this->end_reach_threshold = step_size_ / 2.0f;
+    this->end_reach_threshold = float(step_size_ / 1.5);
 }
 
 int RRT::getMaxLoopCount() {
@@ -127,6 +127,10 @@ std::vector<TreeNode*> RRT::getNodeList() {
     return this->node_list;
 }
 
+std::vector<TreeNode*> RRT::getPath() {
+    return this->path;
+}
+
 void RRT::updatePath(TreeNode* node) {
     if (node == nullptr) {
         return;
@@ -149,11 +153,50 @@ void RRT::updatePath(TreeNode* node) {
 }
 
 void RRT::refinePath() {
+    if (this->path.empty()) {
+        return;
+    }
 
+    int start = 0;
+    int end = this->path.size() - 1;
+    std::vector<TreeNode*> removal_candidate;
+
+    while (start < end - 1) {
+        for (int i = end; i > start + 1; i--) {
+            if (checkRayCast(this->path[start]->getPosition(), this->path[i]->getPosition())) {
+                for (int j = start + 1; j < i; j++) {
+                    removal_candidate.push_back(this->path[j]);
+                }
+
+                start = i;
+                break;
+            }
+        }
+    }
+
+    std::vector<TreeNode*> new_path;
+
+    for (auto node : this->path) {
+        if (std::find(removal_candidate.begin(), removal_candidate.end(), node) == removal_candidate.end()) {
+            new_path.push_back(node);
+        }
+    }
+
+    this->path = new_path;
 }
 
-std::vector<TreeNode*> RRT::getPath() {
-    return this->path;
+bool RRT::checkRayCast(const Eigen::Vector2f& start, const Eigen::Vector2f& end) {
+    Eigen::Vector2f vector = end - start;
+    int iter_size = int(std::ceil(std::max(std::abs(vector.x()), std::abs(vector.y())) / this->map->getMapResolution()));
+    Eigen::Vector2f iter_vector = vector / iter_size;
+
+    for (int i = 1; i < iter_size; i++) {
+        if (isObstacle(start + iter_vector * i)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 

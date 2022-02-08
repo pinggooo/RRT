@@ -11,6 +11,7 @@
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "RRT.hpp"
+#include "RRTConnect.hpp"
 
 #include <chrono>
 
@@ -20,7 +21,8 @@ public:
     ~Application() = default;
 
     bool initialize();
-    void run();
+    void runRRT();
+    void runRRTConnect();
 
     bool isGotStartPos;
     bool isGotEndPos;
@@ -37,6 +39,7 @@ private:
     void mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
 
     RRT* rrt;
+    RRTConnect* rrt_connect;
     Map* map;
 
     rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr start_point_pub_;
