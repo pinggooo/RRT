@@ -31,9 +31,8 @@ $ ros2 run nav2_map_server map_server --ros-args -p yaml_filename:="turtlebot3_w
 ```
 $ cd ~/xxx_ws/src/turtlebot3/turtlebot3_navigation2/map
 $ ros2 run nav2_util lifecycle_bringup map_server
-
 ```
-
+<br/><br/>
 
 <div align="center">
   <img src="https://user-images.githubusercontent.com/69897315/152476136-9965fead-aa63-4eb9-8fe7-acd3ec788dd7.png" width="400" height="300">
