@@ -1,6 +1,7 @@
 #ifndef RRT_MAP_HPP
 #define RRT_MAP_HPP
 
+#include <iostream>
 #include <vector>
 #include <eigen3/Eigen/Dense>
 
@@ -8,6 +9,8 @@ class Map {
 public:
     Map() = default;
     ~Map() = default;
+
+    void inflateData(int filter_size = 11);
 
     std::vector<int8_t> getMapData();
     Eigen::Vector2f getMapSize();
@@ -24,6 +27,8 @@ public:
     void setEndPos(Eigen::Vector2f position);
 
 private:
+    Eigen::MatrixXi convolve(Eigen::MatrixXi matrix, Eigen::MatrixXi filter);
+
     std::vector<int8_t> data;
     Eigen::Vector2f size;
     Eigen::Vector2f origin;

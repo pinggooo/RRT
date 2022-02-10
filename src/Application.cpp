@@ -76,6 +76,23 @@ void Application::runRRT() {
 }
 
 void Application::runRRTConnect() {
+    auto start_time = std::chrono::steady_clock::now();
+
+    //TODO
+    RRT* current_rrt = rrt_connect->getStartRRT();
+
+    for (int i = 0; i < rrt_connect->getMaxLoopCount(); i++) {
+        TreeNode* random_node = current_rrt->getRandomNode();
+
+        if (random_node == nullptr) {
+            continue;
+        }
+
+        drawPathPoint_(random_node);
+    }
+
+    auto end_time = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
     isFinished = true;
 }
 
@@ -179,6 +196,7 @@ void Application::mapDataCallback_(const nav_msgs::msg::OccupancyGrid::SharedPtr
         this->map->setMapData(msg->data);
         this->map->setMapOrigin(map_origin);
         this->map->setMapResolution(msg->info.resolution);
+        this->map->inflateData();
         this->isGotMapSize = true;
 
         RCLCPP_INFO(this->get_logger(), "Map is Loaded! Map Size: [%.1fx%.1f]", float(this->map->getMapSize().x()), float(this->map->getMapSize().y()));

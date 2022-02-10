@@ -1,6 +1,7 @@
 #include "RRT.hpp"
 #include "catch2/catch_all.hpp"
 
+
 TreeNode* RRT::getRandomNode() {
     std::random_device rd;
     std::default_random_engine eng(rd());
@@ -94,43 +95,6 @@ bool RRT::isReached() {
     return false;
 }
 
-float RRT::getStepSize() {
-    return this->step_size;
-}
-
-void RRT::setStepSize(const float& step_size_) {
-    this->step_size = step_size_;
-    this->end_reach_threshold = float(step_size_ / 1.5);
-}
-
-int RRT::getMaxLoopCount() {
-    return this->max_loop_count;
-}
-
-void RRT::setGetMaxLoopCount(const int& max_loop_count_) {
-    this->max_loop_count = max_loop_count_;
-}
-
-TreeNode* RRT::getStartNode() {
-    return this->start_node;
-}
-
-TreeNode* RRT::getEndNode() {
-    return this->end_node;
-}
-
-TreeNode* RRT::getLastNode() {
-    return this->last_node;
-}
-
-std::vector<TreeNode*> RRT::getNodeList() {
-    return this->node_list;
-}
-
-std::vector<TreeNode*> RRT::getPath() {
-    return this->path;
-}
-
 void RRT::updatePath(TreeNode* node) {
     if (node == nullptr) {
         return;
@@ -197,6 +161,55 @@ bool RRT::checkRayCast(const Eigen::Vector2f& start, const Eigen::Vector2f& end)
     }
 
     return true;
+}
+
+float RRT::getStepSize() {
+    return this->step_size;
+}
+
+int RRT::getMaxLoopCount() {
+    return this->max_loop_count;
+}
+
+TreeNode* RRT::getStartNode() {
+    return this->start_node;
+}
+
+TreeNode* RRT::getEndNode() {
+    return this->end_node;
+}
+
+TreeNode* RRT::getLastNode() {
+    return this->last_node;
+}
+
+std::vector<TreeNode*> RRT::getNodeList() {
+    return this->node_list;
+}
+
+std::vector<TreeNode*> RRT::getPath() {
+    return this->path;
+}
+
+void RRT::setStepSize(const float& step_size_) {
+    this->step_size = step_size_;
+    this->end_reach_threshold = float(step_size_ / 1.5);
+}
+
+void RRT::setGetMaxLoopCount(const int& max_loop_count_) {
+    this->max_loop_count = max_loop_count_;
+}
+
+void RRT::setStartNode(TreeNode* start_node_) {
+    this->start_node = start_node_;
+}
+
+void RRT::setEndNode(TreeNode* end_node_) {
+    this->end_node = end_node_;
+}
+
+void RRT::setLastNode(TreeNode* last_node_) {
+    this->last_node = last_node_;
 }
 
 

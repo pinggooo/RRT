@@ -1,15 +1,14 @@
 # RRT Algorithm for Robot path planning
+### Requirements
 ```
-This is an Intern program Project.
-
 - ROS2 foxy
-- C++ 11
-- Turtlebot3 packages
+- C++ 14
 - Eigen3
 - Catch2
 - Rviz
 - Gazebo
 - Navigation2
+- Turtlebot3 packages
 ```
 
 ## Usage
