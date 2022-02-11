@@ -9,8 +9,8 @@ int main(int argc, char** argv) {
 
     while (rclcpp::ok()) {
         if (app->initialize() && !app->isFinished) {
-            app->runRRT();
-            //app->runRRTConnect();
+            //app->runRRT();
+            app->runRRTConnect();
             break;
         }
 

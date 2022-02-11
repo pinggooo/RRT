@@ -57,6 +57,7 @@ void Application::runRRT() {
         if (rrt->isReached()) {
             this->isMaxLoopOver = false;
             rrt->updatePath(rrt->getLastNode());
+
             Eigen::Vector2f last_pos = rrt->getLastNode()->getPosition();
             RCLCPP_INFO(this->get_logger(), "RRT is reached at end position! (%f, %f)", last_pos.x(), last_pos.y());
             break;
@@ -78,10 +79,8 @@ void Application::runRRT() {
 void Application::runRRTConnect() {
     auto start_time = std::chrono::steady_clock::now();
 
-    //TODO
-    RRT* current_rrt = rrt_connect->getStartRRT();
-
     for (int i = 0; i < rrt_connect->getMaxLoopCount(); i++) {
+        RRT* current_rrt = rrt_connect->getActivatedRRT();
         TreeNode* random_node = current_rrt->getRandomNode();
 
         if (random_node == nullptr) {
@@ -89,7 +88,24 @@ void Application::runRRTConnect() {
         }
 
         drawPathPoint_(random_node);
+
+        if (rrt_connect->isReached()) {
+            this->isMaxLoopOver = false;
+            rrt_connect->updatePath();
+
+            RCLCPP_INFO(this->get_logger(), "RRT Connect is reached at end position!");
+            break;
+        }
+
+        rrt_connect->swapActivation();
     }
+
+    if (isMaxLoopOver) {
+        RCLCPP_INFO(this->get_logger(), "Loop is over max loop count(%d)!", rrt_connect->getMaxLoopCount());
+    }
+
+    rrt_connect->refinePath();
+    drawPathLine_(rrt_connect->getPath());
 
     auto end_time = std::chrono::steady_clock::now();
     RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
@@ -157,6 +173,12 @@ void Application::drawPathLine_(const std::vector<TreeNode*>& path) {
 void Application::startPosCallback_(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
     if (!this->isGotStartPos) {
         Eigen::Vector2f start_pos(float(msg->pose.pose.position.x), float(msg->pose.pose.position.y));
+
+        if (!this->map->isValidPos(start_pos)) {
+            RCLCPP_INFO(this->get_logger(), "Invalid Position! Please publish start position again...");
+            return;
+        }
+
         this->map->setStartPos(start_pos);
         this->isGotStartPos = true;
 
@@ -174,6 +196,12 @@ void Application::startPosCallback_(const geometry_msgs::msg::PoseWithCovariance
 void Application::endPosCallback_(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
     if (!this->isGotEndPos) {
         Eigen::Vector2f end_pos(float(msg->pose.position.x), float(msg->pose.position.y));
+
+        if (!this->map->isValidPos(end_pos)) {
+            RCLCPP_INFO(this->get_logger(), "Invalid Position! Please publish end position again...");
+            return;
+        }
+
         this->map->setEndPos(end_pos);
         this->isGotEndPos = true;
 

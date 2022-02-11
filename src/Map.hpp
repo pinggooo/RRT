@@ -10,7 +10,9 @@ public:
     Map() = default;
     ~Map() = default;
 
-    void inflateData(int filter_size = 11);
+    void inflateData(int filter_size = 7);
+    bool isValidPos(const Eigen::Vector2f& position);
+    static float getDistance(const Eigen::Vector2f& a, const Eigen::Vector2f& b);
 
     std::vector<int8_t> getMapData();
     Eigen::Vector2f getMapSize();

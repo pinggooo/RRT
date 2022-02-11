@@ -52,6 +52,25 @@ Eigen::MatrixXi Map::convolve(Eigen::MatrixXi matrix, Eigen::MatrixXi filter) {
     return convolved_matrix;
 }
 
+bool Map::isValidPos(const Eigen::Vector2f& position) {
+    int x = int((position.x() - this->origin.x()) / this->resolution);
+    int y = int((position.y() - this->origin.y()) / this->resolution);
+    int index = int(this->size.x() / this->resolution) * y + x;
+
+    if (this->data[index] == -1 || this->data[index] >= 65) {
+        return false;
+    }
+
+    return true;
+}
+
+float Map::getDistance(const Eigen::Vector2f& a, const Eigen::Vector2f& b) {
+    float x_diff = abs(a.x() - b.x());
+    float y_diff = abs(a.y() - b.y());
+
+    return sqrtf(x_diff * x_diff + y_diff * y_diff);
+}
+
 std::vector<int8_t> Map::getMapData() {
     return this->data;
 }

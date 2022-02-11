@@ -20,7 +20,7 @@ TreeNode* RRT::getRandomNode() {
     random_pos = nearest->getPosition() + unit_vector * this->step_size;
     random_node->setPosition(random_pos);
 
-    if (isObstacle(random_pos)) {
+    if (!this->map->isValidPos(random_pos)) {
         return nullptr;
     }
 
@@ -37,22 +37,13 @@ TreeNode* RRT::getRandomNode() {
     return random_node;
 }
 
-float RRT::getDistance(TreeNode* a, TreeNode* b) {
-    Eigen::Vector2f a_pos = a->getPosition();
-    Eigen::Vector2f b_pos = b->getPosition();
-    float x_diff = abs(a_pos.x() - b_pos.x());
-    float y_diff = abs(a_pos.y() - b_pos.y());
-
-    return sqrtf(x_diff * x_diff + y_diff * y_diff);
-}
-
 TreeNode* RRT::getNearest(TreeNode* node) {
     Eigen::Vector2f map_size = map->getMapSize();
     TreeNode* nearest;
     float min_distance = sqrtf(map_size.x() * map_size.x() + map_size.y() * map_size.y());
 
     for (auto& node_iter : this->node_list) {
-        float distance = getDistance(node, node_iter);
+        float distance = Map::getDistance(node->getPosition(), node_iter->getPosition());
 
         if (distance < min_distance) {
             nearest = node_iter;
@@ -70,25 +61,8 @@ void RRT::addNode(TreeNode* node, TreeNode* parent) {
     this->last_node = node;
 }
 
-bool RRT::isObstacle(const Eigen::Vector2f& position) {
-    std::vector<int8_t> map_data = this->map->getMapData();
-    Eigen::Vector2f map_origin = this->map->getMapOrigin();
-    Eigen::Vector2f map_size = this->map->getMapSize();
-    float map_resolution = this->map->getMapResolution();
-
-    int x = int((position.x() - map_origin.x()) / map_resolution);
-    int y = int((position.y() - map_origin.y()) / map_resolution);
-    int index = int(map_size.x() / map_resolution) * y + x;
-
-    if (map_data[index] == -1 || map_data[index] >= 65) {
-        return true;
-    }
-
-    return false;
-}
-
 bool RRT::isReached() {
-    if (getDistance(last_node, end_node) <= end_reach_threshold) {
+    if (Map::getDistance(last_node->getPosition(), end_node->getPosition()) <= end_reach_threshold) {
         return true;
     }
 
@@ -155,7 +129,7 @@ bool RRT::checkRayCast(const Eigen::Vector2f& start, const Eigen::Vector2f& end)
     Eigen::Vector2f iter_vector = vector / iter_size;
 
     for (int i = 1; i < iter_size; i++) {
-        if (isObstacle(start + iter_vector * i)) {
+        if (!this->map->isValidPos(start + iter_vector * i)) {
             return false;
         }
     }
@@ -210,6 +184,10 @@ void RRT::setEndNode(TreeNode* end_node_) {
 
 void RRT::setLastNode(TreeNode* last_node_) {
     this->last_node = last_node_;
+}
+
+void RRT::setPath(std::vector<TreeNode*> path_) {
+    this->path = path_;
 }
 
 

@@ -21,10 +21,8 @@ public:
     ~RRT() = default;
 
     TreeNode* getRandomNode();
-    float getDistance(TreeNode* a, TreeNode* b);
     TreeNode* getNearest(TreeNode* node);
     void addNode(TreeNode* node, TreeNode* parent);
-    bool isObstacle(const Eigen::Vector2f& position);
     bool isReached();
     void updatePath(TreeNode* node);
     void refinePath();
@@ -43,6 +41,7 @@ public:
     void setStartNode(TreeNode* start_node_);
     void setEndNode(TreeNode* end_node_);
     void setLastNode(TreeNode* last_node_);
+    void setPath(std::vector<TreeNode*> path_);
 
 private:
     float step_size;
