@@ -44,7 +44,7 @@ void RRTConnect::updatePath() {
 
     node = this->connect_node;
 
-    while(node != nullptr) {
+    while (node != nullptr) {
         new_path.push_back(node);
         node = node->getParent();
     }
