@@ -1,4 +1,9 @@
-# RRT Algorithm for Robot path planning
+# RRT Algorithms for Robot path planning
+```
+- RRT
+- RRT Connect
+- RRT*
+```
 ### Requirements
 ```
 - ROS2 foxy
