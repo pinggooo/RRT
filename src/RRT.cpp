@@ -28,7 +28,7 @@ TreeNode* RRT::getRandomNode() {
         return nullptr;
     }
 
-    if (random_pos.y() < map_origin.x() || random_pos.y() > map_origin.y() + map_size.y()) {
+    if (random_pos.y() < map_origin.y() || random_pos.y() > map_origin.y() + map_size.y()) {
         return nullptr;
     }
 
@@ -42,7 +42,7 @@ TreeNode* RRT::getNearest(TreeNode* node) {
     TreeNode* nearest;
     float min_distance = sqrtf(map_size.x() * map_size.x() + map_size.y() * map_size.y());
 
-    for (auto& node_iter : this->node_list) {
+    for (auto node_iter : this->node_list) {
         float distance = Map::getDistance(node->getPosition(), node_iter->getPosition());
 
         if (distance < min_distance) {
@@ -96,31 +96,41 @@ void RRT::refinePath() {
     }
 
     int start = 0;
-    int end = this->path.size() - 1;
-    std::vector<TreeNode*> removal_candidate;
+    int end = int(this->path.size()) - 1;
+    std::vector<TreeNode*> removal_candidates;
 
     while (start < end - 1) {
         for (int i = end; i > start + 1; i--) {
             if (checkRayCast(this->path[start]->getPosition(), this->path[i]->getPosition())) {
                 for (int j = start + 1; j < i; j++) {
-                    removal_candidate.push_back(this->path[j]);
+                    removal_candidates.push_back(this->path[j]);
                 }
 
                 start = i;
                 break;
             }
         }
+
+        start++;
+    }
+
+    if (removal_candidates.empty()) {
+        return;
     }
 
     std::vector<TreeNode*> new_path;
 
     for (auto node : this->path) {
-        if (std::find(removal_candidate.begin(), removal_candidate.end(), node) == removal_candidate.end()) {
+        if (std::find(removal_candidates.begin(), removal_candidates.end(), node) == removal_candidates.end()) {
             new_path.push_back(node);
         }
     }
 
-    this->path = new_path;
+    this->path.clear();
+
+    for (auto node : new_path) {
+        this->path.push_back(node);
+    }
 }
 
 bool RRT::checkRayCast(const Eigen::Vector2f& start, const Eigen::Vector2f& end) {

@@ -2,12 +2,13 @@
 #define RRT_RRTCONNECT_HPP
 
 #include "RRT.hpp"
+#include "RRTStar.hpp"
 
 class RRTConnect {
 public:
-    explicit RRTConnect(Map* map, int max_loop_count = 30000) {
-        this->start_rrt = new RRT(map);
-        this->end_rrt = new RRT(map);
+    explicit RRTConnect(Map* map, int max_loop_count = 50000) {
+        this->start_rrt = new RRTStar(map);
+        this->end_rrt = new RRTStar(map);
         this->activated_rrt = this->start_rrt;
         this->inactivated_rrt = this->end_rrt;
         this->max_loop_count = max_loop_count;

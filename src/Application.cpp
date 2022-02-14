@@ -8,6 +8,7 @@ Application::Application() : Node("rrt_simulator") {
     this->isMaxLoopOver = true;
     this->rrt = nullptr;
     this->rrt_connect = nullptr;
+    this->rrt_star = nullptr;
     this->map = new Map();
 
     start_point_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("start_point", rclcpp::QoS(rclcpp::KeepAll()));
@@ -34,6 +35,11 @@ bool Application::initialize() {
         if (rrt_connect == nullptr) {
             this->rrt_connect = new RRTConnect(map);
             RCLCPP_INFO(this->get_logger(), "RRT Connect is Initialized!");
+        }
+
+        if (rrt_star == nullptr) {
+            this->rrt_star = new RRTStar(map);
+            RCLCPP_INFO(this->get_logger(), "RRT Star is Initialized!");
         }
 
         return true;
@@ -106,6 +112,40 @@ void Application::runRRTConnect() {
 
     rrt_connect->refinePath();
     drawPathLine_(rrt_connect->getPath());
+
+    auto end_time = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+    isFinished = true;
+}
+
+void Application::runRRTStar() {
+    auto start_time = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < rrt_star->getMaxLoopCount(); i++) {
+        TreeNode* random_node = rrt_star->getRandomNode();
+
+        if (random_node == nullptr) {
+            continue;
+        }
+
+        drawPathPoint_(random_node);
+
+        if (rrt_star->isReached()) {
+            this->isMaxLoopOver = false;
+            rrt_star->updatePath(rrt_star->getLastNode());
+
+            Eigen::Vector2f last_pos = rrt_star->getLastNode()->getPosition();
+            RCLCPP_INFO(this->get_logger(), "RRT is reached at end position! (%f, %f)", last_pos.x(), last_pos.y());
+            break;
+        }
+    }
+
+    if (isMaxLoopOver) {
+        RCLCPP_INFO(this->get_logger(), "Loop is over max loop count(%d)!", rrt_star->getMaxLoopCount());
+    }
+
+    rrt_star->refinePath();
+    drawPathLine_(rrt_star->getPath());
 
     auto end_time = std::chrono::steady_clock::now();
     RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));

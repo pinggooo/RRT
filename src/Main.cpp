@@ -11,6 +11,7 @@ int main(int argc, char** argv) {
         if (app->initialize() && !app->isFinished) {
             //app->runRRT();
             app->runRRTConnect();
+            //app->runRRTStar();
             break;
         }
 

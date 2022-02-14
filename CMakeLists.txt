@@ -27,7 +27,15 @@ find_package(Catch2 REQUIRED)
 
 ## add_executable(tree_node src/TreeNode.cpp)
 ## add_executable(RRT src/RRT.cpp src/TreeNode.cpp)
-add_executable(rrt_test src/Main.cpp src/RRT.cpp src/RRTConnect.cpp src/TreeNode.cpp src/Application.cpp src/Map.cpp)
+add_executable(rrt_test
+        src/Main.cpp
+        src/RRT.cpp
+        src/RRTConnect.cpp
+        src/RRTStar.cpp
+        src/TreeNode.cpp
+        src/Application.cpp
+        src/Map.cpp
+ )
 
 ## ament_target_dependencies(tree_node Eigen3 Catch2)
 ## ament_target_dependencies(RRT Eigen3 Catch2)

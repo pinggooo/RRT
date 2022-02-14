@@ -3,14 +3,6 @@
 
 int TreeNode::count = 1;
 
-int TreeNode::getId() {
-    return this->id;
-}
-
-std::vector<TreeNode*> TreeNode::getChildren() {
-    return this->children;
-}
-
 void TreeNode::addChild(TreeNode* node) {
     for (auto& iter : this->children) {
         if (iter->getId() == node->getId()) {
@@ -26,24 +18,38 @@ void TreeNode::removeChild(TreeNode* node) {
                          this->children.end());
 }
 
-TreeNode* TreeNode::getParent() {
-    return this->parent;
-}
-
-void TreeNode::setParent(TreeNode* node) {
-    this->parent = node;
-}
-
 void TreeNode::removeParent() {
     this->parent = nullptr;
+    this->depth = 0;
+}
+
+int TreeNode::getId() {
+    return this->id;
+}
+
+std::vector<TreeNode*> TreeNode::getChildren() {
+    return this->children;
+}
+
+TreeNode* TreeNode::getParent() {
+    return this->parent;
 }
 
 Eigen::Vector2f TreeNode::getPosition() {
     return this->position;
 }
 
-void TreeNode::setPosition(const Eigen::Vector2f& position) {
-    this->position = position;
+int TreeNode::getDepth() {
+    return this->depth;
+}
+
+void TreeNode::setParent(TreeNode* node) {
+    this->parent = node;
+    this->depth = this->parent->getDepth() + 1;
+}
+
+void TreeNode::setPosition(const Eigen::Vector2f& position_) {
+    this->position = position_;
 }
 
 //****************************************************//

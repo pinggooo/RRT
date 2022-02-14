@@ -15,19 +15,23 @@ public:
         this->id = count++;
 
         if (this->parent != nullptr) {
+            this->depth = this->parent->getDepth() + 1;
             this->parent->addChild(this);
         }
     }
 
-    int getId();
-    std::vector<TreeNode*> getChildren();
     void addChild(TreeNode* node);
     void removeChild(TreeNode* node);
-    TreeNode* getParent();
-    void setParent(TreeNode* node);
     void removeParent();
+
+    int getId();
+    TreeNode* getParent();
+    std::vector<TreeNode*> getChildren();
     Eigen::Vector2f getPosition();
-    void setPosition(const Eigen::Vector2f& position);
+    int getDepth();
+
+    void setParent(TreeNode* node);
+    void setPosition(const Eigen::Vector2f& position_);
 
     bool operator == (const TreeNode& object) const {
         if (this->id == object.id) {
@@ -41,6 +45,7 @@ public:
 
 private:
     int id{};
+    int depth{};
     TreeNode* parent{};
     std::vector<TreeNode*> children;
     Eigen::Vector2f position;

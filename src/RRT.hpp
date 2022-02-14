@@ -7,7 +7,7 @@
 
 class RRT {
 public:
-    explicit RRT(Map* map, int max_loop_count = 30000) {
+    explicit RRT(Map* map, int max_loop_count = 50000) {
         this->start_node = new TreeNode(nullptr, map->getStartPos());
         this->end_node = new TreeNode(nullptr, map->getEndPos());
         this->last_node = start_node;
@@ -20,7 +20,7 @@ public:
 
     ~RRT() = default;
 
-    TreeNode* getRandomNode();
+    virtual TreeNode* getRandomNode();
     TreeNode* getNearest(TreeNode* node);
     void addNode(TreeNode* node, TreeNode* parent);
     bool isReached();
@@ -43,7 +43,7 @@ public:
     void setLastNode(TreeNode* last_node_);
     void setPath(std::vector<TreeNode*> path_);
 
-private:
+protected:
     float step_size;
     int max_loop_count;
     float end_reach_threshold;

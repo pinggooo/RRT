@@ -12,6 +12,7 @@
 #include "visualization_msgs/msg/marker.hpp"
 #include "RRT.hpp"
 #include "RRTConnect.hpp"
+#include "RRTStar.hpp"
 
 #include <chrono>
 
@@ -23,6 +24,7 @@ public:
     bool initialize();
     void runRRT();
     void runRRTConnect();
+    void runRRTStar();
 
     bool isGotStartPos;
     bool isGotEndPos;
@@ -40,6 +42,7 @@ private:
 
     RRT* rrt;
     RRTConnect* rrt_connect;
+    RRTStar* rrt_star;
     Map* map;
 
     rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr start_point_pub_;
