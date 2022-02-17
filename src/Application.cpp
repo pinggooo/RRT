@@ -1,8 +1,8 @@
 #include "Application.hpp"
 
 Application::Application() : Node("rrt_simulator") {
-    this->isGotStartPos = true; //false;
-    this->isGotEndPos = true; //false;
+    this->isGotStartPos = false;
+    this->isGotEndPos = false;
     this->isGotMapSize = false;
     this->isFinished = false;
     this->isMaxLoopOver = true;
