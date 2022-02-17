@@ -1,8 +1,8 @@
 #include "Application.hpp"
 
 Application::Application() : Node("rrt_simulator") {
-    this->isGotStartPos = false;
-    this->isGotEndPos = false;
+    this->isGotStartPos = true; //false;
+    this->isGotEndPos = true; //false;
     this->isGotMapSize = false;
     this->isFinished = false;
     this->isMaxLoopOver = true;
@@ -49,6 +49,7 @@ bool Application::initialize() {
 }
 
 void Application::runRRT() {
+    //rrt = new RRT(map);
     auto start_time = std::chrono::steady_clock::now();
 
     for (int i = 0; i < rrt->getMaxLoopCount(); i++) {
@@ -78,11 +79,12 @@ void Application::runRRT() {
     drawPathLine_(rrt->getPath());
 
     auto end_time = std::chrono::steady_clock::now();
-    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d, Total distance : %f", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), this->getTotalDistance(rrt->getPath()));
     isFinished = true;
 }
 
 void Application::runRRTConnect() {
+    //rrt_connect = new RRTConnect(map);
     auto start_time = std::chrono::steady_clock::now();
 
     for (int i = 0; i < rrt_connect->getMaxLoopCount(); i++) {
@@ -114,11 +116,12 @@ void Application::runRRTConnect() {
     drawPathLine_(rrt_connect->getPath());
 
     auto end_time = std::chrono::steady_clock::now();
-    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d, Total distance : %f", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), this->getTotalDistance(rrt_connect->getPath()));
     isFinished = true;
 }
 
 void Application::runRRTStar() {
+    //rrt_star = new RRTStar(map);
     auto start_time = std::chrono::steady_clock::now();
 
     for (int i = 0; i < rrt_star->getMaxLoopCount(); i++) {
@@ -135,7 +138,7 @@ void Application::runRRTStar() {
             rrt_star->updatePath(rrt_star->getLastNode());
 
             Eigen::Vector2f last_pos = rrt_star->getLastNode()->getPosition();
-            RCLCPP_INFO(this->get_logger(), "RRT is reached at end position! (%f, %f)", last_pos.x(), last_pos.y());
+            RCLCPP_INFO(this->get_logger(), "RRT Star is reached at end position! (%f, %f)", last_pos.x(), last_pos.y());
             break;
         }
     }
@@ -148,8 +151,19 @@ void Application::runRRTStar() {
     drawPathLine_(rrt_star->getPath());
 
     auto end_time = std::chrono::steady_clock::now();
-    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
+    RCLCPP_INFO(this->get_logger(), "Elapsed Time(ms) : %d, Total distance : %f", std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), this->getTotalDistance(rrt_star->getPath()));
     isFinished = true;
+}
+
+float Application::getTotalDistance(const std::vector<TreeNode*>& path) {
+    float total_distance = 0;
+
+    for (int i = 0; i < int(path.size()) - 1; i++) {
+        float distance = Map::getDistance(path[i]->getPosition(), path[i + 1]->getPosition());
+        total_distance += distance;
+    }
+
+    return total_distance;
 }
 
 void Application::drawPathPoint_(TreeNode* node) {
@@ -185,7 +199,7 @@ void Application::drawPathPoint_(TreeNode* node) {
     marker_.points.push_back(line_point_);
 
     rrt_line_pub_->publish(marker_);
-    RCLCPP_INFO(this->get_logger(), "Node %d is made! (%f, %f)", node->getId(), node->getPosition().x(), node->getPosition().y());
+    //RCLCPP_INFO(this->get_logger(), "Node %d is made! (%f, %f)", node->getId(), node->getPosition().x(), node->getPosition().y());
 }
 
 void Application::drawPathLine_(const std::vector<TreeNode*>& path) {

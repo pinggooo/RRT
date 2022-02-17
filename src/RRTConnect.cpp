@@ -64,6 +64,10 @@ RRT* RRTConnect::getActivatedRRT() {
     return this->activated_rrt;
 }
 
+RRT* RRTConnect::getInactivatedRRT() {
+    return this->inactivated_rrt;
+}
+
 int RRTConnect::getMaxLoopCount() {
     return this->max_loop_count;
 }

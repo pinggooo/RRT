@@ -33,6 +33,7 @@ public:
     bool isMaxLoopOver;
 
 private:
+    float getTotalDistance(const std::vector<TreeNode*>& path);
     void drawPathPoint_(TreeNode* node);
     void drawPathLine_(const std::vector<TreeNode*>& path);
 

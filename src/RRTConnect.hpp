@@ -31,6 +31,7 @@ public:
     void refinePath();
 
     RRT* getActivatedRRT();
+    RRT* getInactivatedRRT();
     int getMaxLoopCount();
     std::vector<TreeNode*> getPath();
 

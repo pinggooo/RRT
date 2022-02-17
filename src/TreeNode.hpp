@@ -1,7 +1,6 @@
 #ifndef RRT_TREENODE_HPP
 #define RRT_TREENODE_HPP
 
-#include <iostream>
 #include <vector>
 #include <eigen3/Eigen/Dense>
 
